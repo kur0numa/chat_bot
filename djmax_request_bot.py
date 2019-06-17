@@ -38,20 +38,21 @@ class TwitchBot(irc.bot.SingleServerIRCBot):
 
         print(e.tags)
 
-        broadcaster = e.tags[1].get('value')
-        moderater = e.tags[7].get('value')
+        broadcaster = e.tags[1].get('value') # broadcaster 항목의 값을 저장함. 이 값을 확인하여 방주인지 아닌지 확인가능
+        moderator = e.tags[7].get('value') # mod의 값을 저장함. 이 값을 확인하여 moderator 인지 아닌지 확인이 가능
 
-        displayname = e.tags[3].get('value') # 누가 입력했는지 저장
+        displayname = e.tags[3].get('value') # 누가 입력했는지, displayname 을 저장함.
 
-        print(displayname) # 제대로 저장되었는지 출력해봄
-        print(moderater)
+        # 디버깅용. 값이 제대로 저장되었는지 콘솔에 출력함
+        print(displayname)
+        print(moderator)
 
         if e.arguments[0][:1] == '+':  
             cmd = e.arguments[0].split(' ')[0][1:] 
             print('Received command: ' + cmd)
 
-
-            if broadcaster == 'broadcaster/1' or moderater == '1':
+            # broadcaster의 값과 moderator의 값을 확인하여 op_command로 보낼것인지 command로 보낼것인지 결정함
+            if broadcaster == 'broadcaster/1' or moderator == '1':
                 
                 if cmd == '초기화' or cmd == '다음곡':
                     self.do_op_command(e, cmd)
@@ -63,7 +64,8 @@ class TwitchBot(irc.bot.SingleServerIRCBot):
                 self.do_command(e, cmd)  
 
 
-    def do_op_command(self, e, cmd):
+    # broadcaster/1, 또는 moderator 만 사용가능한 명령어
+    def do_op_command(self, e, cmd): 
         c = self.connection
 
         global request_number
@@ -71,7 +73,6 @@ class TwitchBot(irc.bot.SingleServerIRCBot):
         global song_name
         global userlist
 
-        # 나만 사용가능한 명령어
         if cmd == '초기화':
             request_number = 0
             now_song = 0
@@ -85,7 +86,7 @@ class TwitchBot(irc.bot.SingleServerIRCBot):
             if now_song < request_number:
                 print(song_name[now_song]) # 테스트용
                 print(request_number, now_song)
-                c.privmsg(self.channel, "다음 신청곡은 " + str(song_name[now_song]) + ", 신청자는 >> " + str(userlist[now_song]) + " << 입니다 :)")
+                c.privmsg(self.channel, "다음 신청곡은 " + "\"" + str(song_name[now_song]) + "\"" + ", 신청자는 @" + str(userlist[now_song]) + " 입니다 :)")
                 request_number -= 1
                 print(now_song)
                 userlist.pop(0)
@@ -94,7 +95,8 @@ class TwitchBot(irc.bot.SingleServerIRCBot):
             else:
                 c.privmsg(self.channel, "더이상 신청곡이 없습니다!")
 
-  
+
+    # 일반 유저들이 사용 가능한 명령어들
     def do_command(self, e, cmd):  
         c = self.connection  
         displayname = e.tags[3].get('value')
@@ -120,7 +122,7 @@ class TwitchBot(irc.bot.SingleServerIRCBot):
                 if len(e.arguments[0]) > 3:
                     song_name.insert(request_number, e.arguments[0][4:]) # +리퀘스트 이후부터의 내용을 변수에 저장
                     print(song_name[request_number]) # 제대로 들어갔는지 테스트용
-                    c.privmsg(self.channel, "대기열에 " + str(request_number + 1) + "번째 리퀘스트 >> " + str(song_name[request_number]) + " << (이)가 추가되었습니다.")
+                    c.privmsg(self.channel, "대기열에 " + str(request_number + 1) + "번째 리퀘스트 " + "\"" + str(song_name[request_number]) + "\"" + " (이)가 추가되었습니다.")
                     request_number += 1
                     print(request_number) # 전역변수 값이 제대로 수정되었나 출력용도
                     userlist.insert(request_number, displayname)
@@ -134,7 +136,7 @@ class TwitchBot(irc.bot.SingleServerIRCBot):
             print(len(e.arguments[0])) # 명령어 전체의 길이 파악
             
             if userlist.count(displayname) > 0:
-                c.privmsg(self.channel, "한 사람당 한 곡 이상 신청할 수 없어요 T^T")
+                c.privmsg(self.channel, "Only 1 Song Request, 1 User. T^T")
 
             else:
                 if len(e.arguments[0]) > 6:
@@ -148,10 +150,9 @@ class TwitchBot(irc.bot.SingleServerIRCBot):
                 else:
                     c.privmsg(self.channel, "정상적인 입력이 아닙니다 T^T")
 
-
 #        elif cmd == '목록':
 #            print(song_name)
-
+        
 #            if song_name != []:
 #                c.privmsg(self.channel, "현재 신청되어 있는 곡은 " + str(song_name) + "입니다!")
 
