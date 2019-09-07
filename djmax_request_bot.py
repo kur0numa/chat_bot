@@ -32,7 +32,10 @@ class TwitchBot(irc.bot.SingleServerIRCBot):
         c.cap('REQ', ':twitch.tv/membership')  
         c.cap('REQ', ':twitch.tv/tags')  
         c.cap('REQ', ':twitch.tv/commands')  
-        c.join(self.channel)  
+        c.join(self.channel)
+
+        message = "정상적으로 연결되었습니다!"
+        c.privmsg(self.channel, message)  
   
     def on_pubmsg(self, c, e):  
 
@@ -106,6 +109,11 @@ class TwitchBot(irc.bot.SingleServerIRCBot):
             message = "이 채팅이 보인다면 테스트가 제대로 진행되고 있다는 뜻이겠죠?"
             c.privmsg(self.channel, message)  
 
+
+        elif cmd == '명령어':
+            message = "사용 가능한 명령어는 [신청, 삭제] 입니다 :)"
+            c.privmsg(self.channel, message)
+
   
         # 리퀘스트 명령어 테스트
         elif cmd == '신청':
@@ -149,6 +157,27 @@ class TwitchBot(irc.bot.SingleServerIRCBot):
 
                 else:
                     c.privmsg(self.channel, "정상적인 입력이 아닙니다 T^T")
+
+                
+        elif cmd == '삭제':
+
+            if displayname in userlist:
+                listnumber = userlist.index(displayname)
+
+                song_name.pop(listnumber)
+                userlist.pop(listnumber)
+                request_number -= 1
+
+                c.privmsg(self.channel, "신청한 곡이 제거 되었습니다. @" + displayname)
+
+
+            else:
+                c.privmsg(self.channel, "신청한 곡이 없어요 T^T")
+
+
+                
+
+
 
 #        elif cmd == '목록':
 #            print(song_name)
